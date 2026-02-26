@@ -1,0 +1,132 @@
+<%- include('partials/header', { userId: true }) %>
+
+<div class="max-w-6xl mx-auto space-y-8 pb-12">
+    <h1 class="text-2xl font-bold text-slate-800">Analyses & Graphiques</h1>
+
+    <!-- GRAPHIQUE 1 : POIDS -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold">1. Évolution du Poids</h2>
+            <div class="flex gap-2">
+                <button id="btn-w-7" onclick="updateWeight(7)" class="px-3 py-1 text-sm rounded transition-colors">7 Jours</button>
+                <button id="btn-w-30" onclick="updateWeight(30)" class="px-3 py-1 text-sm rounded transition-colors">30 Jours</button>
+                <button id="btn-w-90" onclick="updateWeight(90)" class="px-3 py-1 text-sm rounded transition-colors">90 Jours</button>
+            </div>
+        </div>
+        <div class="relative h-[300px] w-full">
+            <canvas id="weightChart"></canvas>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- GRAPHIQUE 2 : CALORIES -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">2. Calories / Jour</h2>
+                <div class="flex gap-2">
+                    <button id="btn-n-7" onclick="updateNutrition(7)" class="px-3 py-1 text-sm rounded transition-colors">7 J</button>
+                    <button id="btn-n-30" onclick="updateNutrition(30)" class="px-3 py-1 text-sm rounded transition-colors">30 J</button>
+                </div>
+            </div>
+            <div class="relative h-[300px] w-full">
+                <canvas id="caloriesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- GRAPHIQUE 3 : MACROS -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">3. Macros / Jour (7 derniers jours)</h2>
+            </div>
+            <div class="relative h-[300px] w-full">
+                <canvas id="macrosChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const rawWeightData = <%- weightData %> ||[];
+    const rawNutritionData = <%- nutritionData %> ||[];
+    let weightChart, caloriesChart, macrosChart;
+
+    function filterByDays(dataArray, days) {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+        return dataArray.filter(item => new Date(item.date) >= cutoffDate);
+    }
+
+    function setActiveButton(prefix, days) {
+        const allDays = prefix === 'w' ? [7, 30, 90] :[7, 30];
+        allDays.forEach(d => {
+            const btn = document.getElementById(`btn-${prefix}-${d}`);
+            if (btn) {
+                btn.className = "px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded transition-colors";
+            }
+        });
+        
+        const activeBtn = document.getElementById(`btn-${prefix}-${days}`);
+        if (activeBtn) {
+            activeBtn.className = "px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-sm rounded transition-colors";
+        }
+    }
+
+    window.addEventListener('load', () => {
+        const ctxWeight = document.getElementById('weightChart').getContext('2d');
+        weightChart = new Chart(ctxWeight, {
+            type: 'line',
+            data: { labels: [], datasets:[{ label: 'Poids (kg)', data: [], borderColor: '#2563eb', tension: 0.3, pointBackgroundColor: '#2563eb' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        const ctxCal = document.getElementById('caloriesChart').getContext('2d');
+        caloriesChart = new Chart(ctxCal, {
+            type: 'bar',
+            data: { labels:[], datasets:[{ label: 'Kcal', data: [], backgroundColor: '#f59e0b' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        const ctxMac = document.getElementById('macrosChart').getContext('2d');
+        macrosChart = new Chart(ctxMac, {
+            type: 'bar',
+            data: { labels:[], datasets:[
+                { label: 'Protéines (g)', data: [], backgroundColor: '#ef4444' },
+                { label: 'Glucides (g)', data:[], backgroundColor: '#eab308' },
+                { label: 'Lipides (g)', data:[], backgroundColor: '#22c55e' }
+            ]},
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                scales: { x: { stacked: true }, y: { stacked: true } }
+            }
+        });
+
+        updateWeight(90);
+        updateNutrition(30);
+        updateMacros();
+    });
+
+    function updateWeight(days) {
+        setActiveButton('w', days);
+        const filtered = filterByDays(rawWeightData, days);
+        weightChart.data.labels = filtered.map(d => d.date);
+        weightChart.data.datasets[0].data = filtered.map(d => d.weight);
+        weightChart.update();
+    }
+
+    function updateNutrition(days) {
+        setActiveButton('n', days);
+        const filtered = filterByDays(rawNutritionData, days);
+        caloriesChart.data.labels = filtered.map(d => d.date);
+        caloriesChart.data.datasets[0].data = filtered.map(d => d.kcal);
+        caloriesChart.update();
+    }
+
+    function updateMacros() {
+        const filtered = filterByDays(rawNutritionData, 7);
+        macrosChart.data.labels = filtered.map(d => d.date);
+        macrosChart.data.datasets[0].data = filtered.map(d => d.p);
+        macrosChart.data.datasets[1].data = filtered.map(d => d.g);
+        macrosChart.data.datasets[2].data = filtered.map(d => d.l);
+        macrosChart.update();
+    }
+</script>
