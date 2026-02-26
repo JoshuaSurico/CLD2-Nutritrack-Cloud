@@ -1,0 +1,171 @@
+<%- include('partials/header', { userId: true }) %>
+
+<!-- IMPORT DE LA LIBRAIRIE FUSE.JS (Pour la recherche intelligente) -->
+<script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"></script>
+
+<div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 pb-12">
+    
+    <!-- MODE A: Recherche Interne -->
+    <div class="lg:col-span-3 bg-white p-8 rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[650px]">
+        <h2 class="text-xl font-bold mb-1">Mode A : Base de données</h2>
+        <p class="text-sm text-slate-500 mb-6">Recherchez avec ou sans accents, même avec des fautes de frappe !</p>
+        
+        <!-- Barre de recherche -->
+        <div class="relative mb-6">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 text-lg">🔍</span>
+            <input type="text" id="searchInput" onkeyup="filterFoods()" placeholder="Ex: pates, pome, poule..." 
+                   class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-shadow bg-slate-50 hover:bg-white focus:bg-white">
+        </div>
+
+        <!-- Liste des aliments -->
+        <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="foodList">
+            <% allFoods.forEach(food => { %>
+                <!-- AJOUT IMPORTANT: data-id pour lier le HTML au script de recherche -->
+                <div class="food-item border border-slate-100 p-4 rounded-xl hover:border-blue-300 hover:shadow-md transition-all bg-white shadow-sm" data-id="<%= food.id %>">
+                    <form action="/add-food" method="POST">
+                        <input type="hidden" name="foodId" value="<%= food.id %>">
+                        
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-bold text-slate-800 food-name text-lg"><%= food.name %></span>
+                            <span class="text-xs font-bold px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
+                                <%= food.kcalPer100g %> kcal / 100g
+                            </span>
+                        </div>
+                        
+                        <div class="flex gap-2 items-center">
+                            <input type="number" name="quantity" placeholder="Quantité (g)" required 
+                                   class="w-1/3 border border-slate-300 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            
+                            <select name="mealType" class="w-1/3 border border-slate-300 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 bg-white">
+                                <option value="Petit-déjeuner">Petit-déj</option>
+                                <option value="Déjeuner">Déjeuner</option>
+                                <option value="Dîner">Dîner</option>
+                                <option value="Collation">Collation</option>
+                            </select>
+                            
+                            <button type="submit" class="w-1/3 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg text-sm font-bold transition-colors">
+                                + Ajouter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            <% }) %>
+
+            <!-- Message si aucun résultat -->
+            <div id="emptyState" class="hidden text-center py-12">
+                <span class="text-5xl block mb-4">🕵️‍♂️</span>
+                <p class="text-slate-800 font-bold text-lg">Aucun aliment trouvé</p>
+                <p class="text-slate-500 mt-2">Même avec notre recherche intelligente, ça ne correspond à rien.</p>
+                <p class="text-blue-600 font-medium mt-2">👉 Utilisez le "Mode B" juste à côté !</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODE B: Ajout Libre -->
+    <div class="lg:col-span-2 bg-slate-800 text-white p-8 rounded-2xl shadow-xl h-fit border border-slate-700">
+        <h2 class="text-xl font-bold mb-1">Mode B : Ajout libre</h2>
+        <p class="text-sm text-slate-400 mb-6">Ajoutez rapidement un aliment personnalisé.</p>
+
+        <form action="/add-food" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Nom de l'aliment</label>
+                <input type="text" name="customName" required class="w-full p-3 rounded-xl bg-slate-900 border border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-white transition-all">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Calories</label>
+                    <input type="number" name="calories" required class="w-full p-3 rounded-xl bg-slate-900 border border-slate-600 outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Quantité (optionnel)</label>
+                    <input type="number" name="quantity" placeholder="g ou unité" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-600 outline-none text-white">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Macros (Optionnel)</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="number" step="0.1" name="protein" placeholder="Prot (g)" class="w-full p-2 rounded-lg bg-slate-900 border border-slate-600 outline-none text-center text-sm">
+                    <input type="number" step="0.1" name="carbs" placeholder="Glu (g)" class="w-full p-2 rounded-lg bg-slate-900 border border-slate-600 outline-none text-center text-sm">
+                    <input type="number" step="0.1" name="fat" placeholder="Lip (g)" class="w-full p-2 rounded-lg bg-slate-900 border border-slate-600 outline-none text-center text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider mt-2">Repas</label>
+                <select name="mealType" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-600 outline-none text-white">
+                    <option>Petit-déjeuner</option><option>Déjeuner</option><option>Dîner</option><option>Collation</option>
+                </select>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition-colors mt-4 shadow-lg shadow-blue-900/50">
+                Enregistrer l'aliment
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Récupération des données envoyées par Node.js
+    const foodsData = <%- JSON.stringify(allFoods) %>;
+
+    // Préparation des données (Enlever les accents pour la recherche)
+    const normalizedData = foodsData.map(food => ({
+        id: food.id.toString(),
+        // Cette ligne magique enlève tous les accents (ex: "Pâtes" devient "Pates")
+        searchName: food.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    }));
+
+    // Configuration de Fuse.js
+    const fuse = new Fuse(normalizedData, {
+        keys: ['searchName'],
+        threshold: 0.3, // 0.3 permet une marge d'erreur (ex: "pome" trouve "pomme")
+        distance: 100
+    });
+
+    function filterFoods() {
+        // On récupère ce que tape l'utilisateur et on enlève aussi ses accents
+        let input = document.getElementById('searchInput').value.toLowerCase();
+        input = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const items = document.querySelectorAll('.food-item');
+        const emptyState = document.getElementById('emptyState');
+
+        // Si le champ est vide, on affiche tout
+        if (input.trim() === '') {
+            items.forEach(item => item.style.display = 'block');
+            emptyState.classList.add('hidden');
+            return;
+        }
+
+        // On lance la recherche Fuse.js
+        const results = fuse.search(input);
+        
+        // On récupère uniquement les IDs des aliments qui correspondent
+        const matchedIds = results.map(r => r.item.id);
+
+        let visibleCount = 0;
+
+        // On affiche/masque les éléments HTML selon les résultats
+        items.forEach(item => {
+            const itemId = item.getAttribute('data-id');
+            if (matchedIds.includes(itemId)) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Afficher l'état vide si nécessaire
+        if (visibleCount === 0) {
+            emptyState.classList.remove('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+        }
+    }
+</script>
+
+</body>
+</html>
