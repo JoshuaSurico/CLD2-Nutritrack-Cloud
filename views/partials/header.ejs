@@ -18,9 +18,10 @@
             </div>
             <div class="flex gap-4 items-center">
                 <% if (typeof userId !== 'undefined') { %>
-                    <a href="/dashboard" class="text-slate-600 hover:text-blue-600 font-medium">Dashboard</a>
-                    <a href="/profile" class="text-slate-600 hover:text-blue-600 font-medium">Mon Profil</a>
-                    <a href="/logout" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition">Déconnexion</a>
+                    <a href="/today" class="text-slate-600 hover:text-blue-600 font-medium">🍎 Journal</a>
+                    <a href="/weight" class="text-slate-600 hover:text-blue-600 font-medium">⚖️ Poids</a>
+                    <a href="/analytics" class="text-slate-600 hover:text-blue-600 font-medium">📈 Graphiques</a>
+                    <a href="/profile" class="text-slate-600 hover:text-blue-600 font-medium">⚙️ Profil</a>
                 <% } else { %>
                     <a href="/login" class="text-slate-600 hover:text-blue-600 font-medium">Connexion</a>
                     <a href="/register" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">S'inscrire</a>
