@@ -1,0 +1,51 @@
+<%- include('partials/header', { userId: true }) %>
+
+<div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+    <h2 class="text-2xl font-bold text-slate-800 mb-6">Paramètres du profil</h2>
+
+    <form action="/profile" method="POST" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Physical info -->
+            <div class="space-y-4">
+                <h3 class="font-semibold text-blue-600">Infos Physiques</h3>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Taille (cm)</label>
+                    <input type="number" name="height" value="<%= user.height %>" step="0.1" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+
+            <!-- Goals -->
+            <div class="space-y-4">
+                <h3 class="font-semibold text-blue-600">Objectifs Journaliers</h3>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Calories (kcal)</label>
+                    <input type="number" name="calorieGoal" value="<%= user.calorieGoal %>" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4 pt-4 border-t">
+            <h3 class="font-semibold text-blue-600">Objectifs Macros</h3>
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Protéines (g)</label>
+                    <input type="number" name="proteinGoal" value="<%= user.proteinGoal %>" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Glucides (g)</label>
+                    <input type="number" name="carbGoal" value="<%= user.carbGoal %>" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Lipides (g)</label>
+                    <input type="number" name="fatGoal" value="<%= user.fatGoal %>" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">
+            Enregistrer les modifications
+        </button>
+    </form>
+</div>
+</body>
+</html>

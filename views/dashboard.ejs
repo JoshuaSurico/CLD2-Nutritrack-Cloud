@@ -1,0 +1,121 @@
+<%- include('partials/header', { userId: true }) %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
+    
+    <div class="lg:col-span-1 space-y-6">
+        
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Nouvelle pesée</h3>
+            <form action="/weight" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date</label>
+                    <input type="date" name="date" required 
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Poids (kg)</label>
+                    <input type="number" step="0.1" name="weight" required placeholder="0.0"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+                    Enregistrer
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Historique</h3>
+            <div class="max-h-64 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-slate-400 border-b text-left">
+                            <th class="pb-2 font-medium">Date</th>
+                            <th class="pb-2 font-medium">Poids</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <% if (entries.length === 0) { %>
+                            <tr><td colspan="2" class="py-4 text-center text-slate-400">Aucune donnée</td></tr>
+                        <% } %>
+                        <% [...entries].reverse().forEach(entry => { %>
+                            <tr>
+                                <td class="py-3 text-slate-600"><%= entry.date %></td>
+                                <td class="py-3 font-bold text-slate-800"><%= entry.weight %> kg</td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Évolution du poids</h3>
+            <div class="relative h-[400px] w-full">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', function() {
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        let rawData = <%- JSON.stringify(entries) %> || [];
+        const sortedData = rawData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const labels = sortedData.map(e => e.date);
+        const weights = sortedData.map(e => e.weight);
+
+        const movingAverage = weights.map((val, index) => {
+            const windowSize = 7;
+            const start = Math.max(0, index - windowSize + 1);
+            const subset = weights.slice(start, index + 1);
+            const sum = subset.reduce((a, b) => a + b, 0);
+            return (sum / subset.length).toFixed(1);
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Poids (kg)',
+                        data: weights,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Moyenne (7j)',
+                        data: movingAverage,
+                        borderColor: '#f59e0b',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'bottom' }
+                },
+                scales: {
+                    y: { grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
