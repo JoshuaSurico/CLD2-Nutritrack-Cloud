@@ -10,10 +10,16 @@ exports.getWeight = async (req, res) => {
 };
 
 exports.postWeight = async (req, res) => {
-    await WeightEntry.create({
-        weight: req.body.weight,
-        date: req.body.date,
-        UserId: req.session.userId
-    });
-    res.redirect('/weight');
+    try {
+        // upsert va chercher si UserId + date existent déjà
+        await WeightEntry.upsert({
+            weight: req.body.weight,
+            date: req.body.date,
+            UserId: req.session.userId
+        });
+        res.redirect('/weight');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Erreur lors de l'enregistrement");
+    }
 };

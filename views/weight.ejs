@@ -39,7 +39,7 @@
                         <% } %>
                         <% [...entries].reverse().forEach(entry => { %>
                             <tr>
-                                <td class="py-3 text-slate-600"><%= entry.date %></td>
+                                <td class="py-3 text-slate-600"><%= new Date(entry.date).toLocaleDateString('fr-FR') %></td>
                                 <td class="py-3 font-bold text-slate-800"><%= entry.weight %> kg</td>
                             </tr>
                         <% }) %>
@@ -65,7 +65,10 @@
         let rawData = <%- JSON.stringify(entries) %> || [];
         const sortedData = rawData.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        const labels = sortedData.map(e => e.date);
+        const labels = sortedData.map(e => {
+            const d = new Date(e.date);
+            return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        });
         const weights = sortedData.map(e => e.weight);
 
         const movingAverage = weights.map((val, index) => {
@@ -73,7 +76,7 @@
             const start = Math.max(0, index - windowSize + 1);
             const subset = weights.slice(start, index + 1);
             const sum = subset.reduce((a, b) => a + b, 0);
-            return (sum / subset.length).toFixed(1);
+            return Number((sum / subset.length).toFixed(1));
         });
 
         new Chart(ctx, {
